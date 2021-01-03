@@ -1,6 +1,7 @@
 import express from 'express';
 import User from './userModel';
 import jwt from 'jsonwebtoken';
+import movieModel from '../movies/movieModel'
 
 const router = express.Router(); // eslint-disable-line
 
@@ -18,12 +19,21 @@ router.get('/:userName/favourites', (req, res, next) => {
 
 // Register OR authenticate a user
 router.post('/', async (req, res, next) => {
+  var regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{5,}$/;
   if (!req.body.username || !req.body.password) {
     res.status(401).json({
       success: false,
       msg: 'Please pass username and password.',
     });
   }
+  
+  if (!regex.test(req.body.password)) {
+    res.status(401).json({
+      success: false,
+      msg: 'ensure passwords are at least 5 characters long and contain at least one number and one letter',
+    });
+  }
+
   if (req.query.action === 'register') {
     await User.create(req.body).catch(next);
     res.status(201).json({
@@ -71,7 +81,7 @@ router.put('/:id',  (req, res) => {
   const user = await User.findByUserName(userName);
   await user.favourites.push(movie._id);
   await user.save(); 
-  res.status(201).json(user); 
+  res.status(201).json(user)
 });
 
 
